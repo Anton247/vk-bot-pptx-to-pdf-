@@ -27,15 +27,7 @@ mess = {}  #Тут будем хранить время последнего о�
 
 @bot.on.message(text="Начать")
 async def hi_handler(message: Message):
-    print()
-    print(message.from_id)
-    print()
     users_info = await bot.api.users.get(message.from_id)
-    print()
-    print(users_info)
-    print()
-    print(users_info[0].first_name)
-    print()
     S = "Привет, " + users_info[0].first_name
     S += "\n👋🏼😀\nЯ Квантоша, бот, созданный для отправки сертификата о посещении дня открытых дверей\
         \nНапиши мне своё имя и я отправлю тебе твой сертификат"
@@ -52,9 +44,6 @@ async def certificate(message: Message):
     users_info = await bot.api.users.get(message.from_id)
     #  "генийальный" анти DDoS
     can_receive_message = 1
-    print()
-    print("MESS:", mess)
-    print()
     if users_info[0].id not in mess: #Если пользователь не писал ещё сообщения, то добавляем его ID в словарь и присваиваем время
         mess[users_info[0].id] = datetime.datetime.now()
     elif (datetime.datetime.now() - mess[users_info[0].id]).total_seconds() < 15:  # Ставим ограничения на время последовательных сообщений боту
@@ -68,18 +57,16 @@ async def certificate(message: Message):
         UID = uuid.uuid4().hex #уникальный идентификатор
         user_name = name_change(message.text)
         file = PPTX_GENERATOR(user_name, UID, now)
-        print("GENERATOR OK")
+        #print("GENERATOR OK")
         file = file.replace(" ", "©")
         command = "python PPTX_to_PDF.py " + file + " " + now
-        print("открываем скрипт для форматирования")
         res = os.system(command)  # открываем скрипт для форматирования
         file = file.replace("©", " ")
-        print("PDF OK")
+        #print("PDF OK")
         doc = await DocMessagesUploader(bot.api).upload(
             file + ".pdf", './GENERATED_PDF/' + now + '/' + file + ".pdf", peer_id=message.peer_id
         )
-        print("DOK OK")
-        await message.answer(attachment=doc)
+        await message.answer(attachment=doc, reply_to=message.id)
 
         connect = sqlite3.connect('users.db')
         cursor = connect.cursor()
